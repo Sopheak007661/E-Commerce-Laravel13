@@ -1,0 +1,419 @@
+# Laravel 13 E-Commerce Project: Step-by-Step Guide
+
+A simple roadmap for building an online shop with User and Admin login, based on your 36-part notes.
+
+## 1. The Big Picture
+
+**What you are building:** an online shop with two kinds of people.
+
+- **User**: browses products, adds to cart, checks out.
+- **Admin**: manages brands, categories, products (create, edit, delete, search, export).
+
+**Tools used**
+
+- Laravel 13 (PHP framework)
+- Laravel Breeze (ready-made login/register)
+- MySQL (database), XAMPP + phpMyAdmin
+- Tailwind CSS + Swiper + Font Awesome (shop design from the GitHub template)
+- Packages: intervention/image-laravel (resize images), maatwebsite/excel (export)
+
+**The 4 building blocks you repeat in every part**
+
+| Block | What it does | Example |
+| --- | --- | --- |
+| Route | URL that the browser opens | /admin/brands |
+| Controller | Code that decides what to do | BrandController |
+| Model | Talks to one database table | Brand |
+| View (Blade) | The HTML page the person sees | admin/brands/index.blade.php |
+
+Flow: **Browser -> Route -> Controller -> Model (database) -> View -> Browser**.
+
+## 2. How to Use This Guide
+
+1. Work in order. Each part uses files from the part before.
+2. After every part, run the site and test it before moving on.
+3. Commit to Git after each part so you can go back if something breaks.
+4. For new projects, copy the same order: setup, layout, database, login, then admin CRUD, then the public shop, then cart.
+
+## 3. Roadmap at a Glance
+
+| Stage | Parts | Goal |
+| --- | --- | --- |
+| A. Setup | 1-3 | Project, Breeze, layout, MySQL |
+| B. Login system | 4-6 | User and Admin login, nice login pages, dashboards |
+| C. Admin: Brands | 7-11 | Brand CRUD + search |
+| D. Admin: Categories | 12-16 | Category CRUD + subcategories |
+| E. Admin: Products | 17-25 | Product CRUD, bulk delete, print, Excel export, sort |
+| F. Public Shop | 26-32 | Shop page, details, sort, filters, search |
+| G. Cart | 33-36 | Add to cart, view cart, change quantity |
+
+---
+
+## Stage A: Setup (Parts 1-3)
+
+### Part 1: Create project and install Breeze
+
+**Goal:** a working Laravel site with login and register pages.
+
+```bash
+composer create-project laravel/laravel Project_Folder_Name
+cd Project_Folder_Name
+composer require laravel/breeze --dev
+php artisan breeze:install blade
+php artisan migrate
+npm install
+npm run build
+php artisan serve
+```
+
+**Check:** open http://127.0.0.1:8000. You should see the welcome page and /login, /register.
+
+**If you see 'No application encryption key':** run `php artisan key:generate`, then `php artisan config:clear`.
+
+### Part 2: Layout setup (shop design)
+
+**Goal:** every page uses one shared shop design (header, footer, scripts).
+
+**Idea:** `resources/views/layouts/app.blade.php` is the master layout. Each page is wrapped in `<x-app-layout> ... </x-app-layout>` and its content is injected where `{{ $slot }}` is.
+
+**Steps**
+
+1. Download the GitHub template. Copy `assets` and `uploads` into `public/`.
+2. In `app.blade.php`: replace `<head>` (Tailwind CDN, Font Awesome, Swiper, custom.css, @vite).
+3. Replace `<body>` with: header, `{{ $slot }}`, footer + scripts.
+4. Create the home page: `php artisan make:view index`, wrap in `<x-app-layout>`.
+5. Create `HomeController` with `index()` that returns `view('index')`.
+6. Add route: `Route::get('/', [HomeController::class, 'index'])->name('home.index');`
+
+**Tips that save time**
+
+- Change links like `href='shop.php'` into route names, for example `{{ route('shop.index') }}`.
+- Use `{{ asset('assets/images/...') }}` for every image, not plain `assets/images/...`. Plain paths break on pages like /shop/product/5.
+- Keep Tailwind CDN while learning. Move to Vite build for production.
+
+### Part 3: MySQL configuration
+
+1. Create an empty database `db_ecommerse` in phpMyAdmin.
+2. Edit `.env`: `DB_CONNECTION=mysql`, `DB_HOST=127.0.0.1`, `DB_PORT=3306`, `DB_DATABASE=db_ecommerse`, `DB_USERNAME=root`, `DB_PASSWORD=` (empty on XAMPP).
+3. Run `php artisan migrate`.
+
+**Check:** phpMyAdmin shows tables users, sessions, cache, jobs.
+
+---
+
+## Stage B: Login System (Parts 4-6)
+
+### Part 4: Admin and User authentication
+
+**Idea:** one `users` table, one extra column `utype`. Value `USER` = normal user, `ADM` = admin.
+
+**Steps**
+
+1. In the users migration add: `mobile` (unique) and `utype` (default USER).
+2. Add `mobile` to the model's fillable list.
+3. In `RegisteredUserController@store`: validate `mobile` and save it.
+4. Add a Mobile input to `auth/register.blade.php`.
+5. Run `php artisan migrate:refresh` (this erases all data).
+6. Create middleware: `php artisan make:middleware AuthAdmin`. In `handle()`: if logged in and `utype == 'ADM'` then continue, else redirect to login.
+7. Create pages: `admin/index.blade.php` and `users/index.blade.php`.
+8. Create `AdminController` and `UserController`, each with `index()`.
+9. Routes: `/users` inside `auth` group, `/admin` inside the `AuthAdmin` group.
+10. Header menu: `@auth` shows first letter of name; My Account goes to admin or user page depending on `utype`; Sign Out is a hidden POST form with `@csrf`.
+
+**Make yourself admin:** in phpMyAdmin, open table users, set `utype` to `ADM` for your row.
+
+**Test:** register -> log in -> My Account opens Users Dashboard. Change to ADM -> My Account opens Admin Dashboard. A normal user opening /admin must be sent away.
+
+### Part 5: Login and Register page design
+
+**Idea:** replace Breeze's default forms with the template's styled forms, but keep the same form fields and `route('login')` / `route('register')` actions.
+
+**Keep these rules or login will break**
+
+- Field names must stay `email`, `password`, `name`, `mobile`, `password_confirmation`.
+- Remember me checkbox must be `name='remember'` (not remember\_me).
+- Errors: use `@error('email') ... @enderror` with the exact field name. Check typos (for example 'mobie' should be 'mobile'; an empty `@error('')` should be `@error('password')`).
+- On plain `<input>` use `value='{{ old('email') }}'`. The `:value=` form only works on Blade components like `<x-text-input>`.
+
+### Part 6: Admin and User dashboard layout
+
+**Idea:** make a separate admin layout (sidebar + top bar) so admin pages look different from the shop.
+
+**Steps**
+
+1. Create `resources/views/layouts/admin.blade.php` (sidebar with links: Dashboard, Brands, Categories, Products, Orders).
+2. Use `<x-admin-layout>` or `@extends('layouts.admin')` in all admin pages.
+3. Create a similar simple layout for the user account area (My Orders, Profile).
+
+**Tip:** use `request()->routeIs('admin.brands*')` to highlight the active menu item.
+
+---
+
+## The CRUD Pattern (use it for Brands, Categories, Products)
+
+Parts 7-25 all follow the same 7 steps. Learn it once, repeat it three times.
+
+1. **Model + migration:** `php artisan make:model Brand -m`
+2. **Migration columns,** then `php artisan migrate`.
+3. **Model:** set fillable fields.
+4. **Controller:** `php artisan make:controller BrandController` with methods index, create, store, edit, update, destroy.
+5. **Routes** inside the AuthAdmin group.
+6. **Views:** index (table), create (form), edit (form).
+7. **Validate** every form with `$request->validate([...])`.
+
+**Route example**
+
+```php
+Route::middleware([AuthAdmin::class])->group(function () {
+    Route::get('/admin/brands', [BrandController::class, 'index'])->name('admin.brands');
+    Route::get('/admin/brand/add', [BrandController::class, 'create'])->name('admin.brand.add');
+    Route::post('/admin/brand/store', [BrandController::class, 'store'])->name('admin.brand.store');
+    Route::get('/admin/brand/{id}/edit', [BrandController::class, 'edit'])->name('admin.brand.edit');
+    Route::put('/admin/brand/update', [BrandController::class, 'update'])->name('admin.brand.update');
+    Route::delete('/admin/brand/{id}/delete', [BrandController::class, 'destroy'])->name('admin.brand.delete');
+});
+```
+
+**Rules for forms:** every form needs `@csrf`. Edit forms need `@method('PUT')`. Delete buttons need `@method('DELETE')`, and ask the person to confirm first.
+
+---
+
+## Stage C: Admin Brands (Parts 7-11)
+
+### Part 7: Brand page
+
+- `php artisan make:model Brand -m`
+- Columns: `name`, `slug` (unique), `image` (nullable).
+- Show a table with paginate: `Brand::orderBy('id','DESC')->paginate(10)`; show links with `{{ $brands->links() }}`.
+
+### Part 8: Create new brand (with image upload)
+
+1. Install the image package from Packagist: `composer require intervention/image-laravel`.
+2. Check GD extension: `php -m`. If gd is missing, open `xampp/php/php.ini`, find `;extension=gd`, remove the `;`, restart Apache.
+3. In store(): validate name, slug (unique), image (mimes png,jpg,jpeg; max 2048).
+4. Make slug with `Str::slug($request->name)`.
+5. Save image: give it a unique file name (`Carbon::now()->timestamp.'.'.$ext`), resize/crop, and save into `public/uploads/brands`.
+6. Redirect back with a success message: `->with('status','Brand added successfully')`.
+
+**Form must have:** `enctype='multipart/form-data'`.
+
+### Part 9: Update brand
+
+- Fill the edit form with current values.
+- If a new image is uploaded: delete the old file (`File::delete(...)`), then save the new one. If not, keep the old image.
+- Slug must be unique but ignore the current row: `unique:brands,slug,`.$request->id.
+
+### Part 10: Delete brand
+
+- Find the row, delete its image file, then `$brand->delete()`.
+- Use a confirm popup (JavaScript confirm or SweetAlert) before submitting.
+
+### Part 11: Search and filter brand
+
+- Add a search box that sends `?q=word` (GET).
+- In the controller: `Brand::when($request->q, fn($q,$s) => $q->where('name','like',"%$s%"))`.
+- Keep pagination working with `->paginate(10)->withQueryString()`.
+
+---
+
+## Stage D: Admin Categories (Parts 12-16)
+
+### Parts 12-15: Category list, create, update, delete
+
+Same CRUD pattern as Brands: columns `name`, `slug`, `image`. Add search and filter on the list page.
+
+### Part 16: Subcategories
+
+**Idea:** a category can have a parent. Root categories have `parent_id = NULL`.
+
+```bash
+php artisan make:migration add_parent_id_to_categories_table --table=categories
+```
+
+```php
+// up()
+$table->unsignedBigInteger('parent_id')->nullable()->after('id');
+$table->foreign('parent_id')->references('id')->on('categories')->onDelete('cascade');
+
+// down()
+$table->dropForeign(['parent_id']);
+$table->dropColumn('parent_id');
+```
+
+- `onDelete('cascade')` means deleting a parent also deletes its children.
+- In the Category model add two relations: `parent()` (belongsTo) and `children()` (hasMany).
+- In the create form add a select box listing root categories (Parent Category, optional).
+
+---
+
+## Stage E: Admin Products (Parts 17-25)
+
+### Part 17: Product page, model, controller
+
+```bash
+php artisan make:model Product -m
+php artisan make:controller ProductController
+```
+
+Suggested columns: `name`, `slug`, `short_description`, `description`, `regular_price`, `sale_price`, `SKU`, `stock_status` (instock/outofstock), `featured` (boolean), `quantity`, `image`, `images` (text, comma list for gallery), `category_id`, `brand_id` (foreign keys).
+
+In the Product model add `category()` and `brand()` relations (belongsTo).
+
+### Part 18: Create product
+
+- Form with main image, gallery images (multiple), category select, brand select.
+- Validate prices as numeric; sale\_price should be less than regular\_price.
+- Save gallery files in a loop and store the names joined by comma.
+
+### Part 19: Edit product
+
+Same as Part 9, plus handle gallery images (keep old ones if none uploaded).
+
+### Part 20: Delete product
+
+Delete main image and gallery files from disk, then delete the row.
+
+### Part 21: Delete multiple products
+
+- Add a checkbox in each row and a Select All checkbox.
+- Submit selected ids as an array: `Product::whereIn('id', $request->ids)->delete()`.
+
+### Part 22: Search and filter products
+
+Search by name or SKU; filter by category, brand, stock status. Combine with `when()` and keep `withQueryString()`.
+
+### Part 23: Print products
+
+- Easiest way: a Print button calling `window.print()` with CSS `@media print` to hide the sidebar and buttons.
+
+### Part 24: Export products to Excel
+
+1. Check zip extension: `php -m`. If missing, enable `extension=zip` in `php.ini` (remove `;`, or add the line), restart Apache.
+2. Install: `composer require maatwebsite/excel`
+3. Create export class: `php artisan make:export ProductExport --model=Product`
+4. Add a route + controller method: `return Excel::download(new ProductExport, 'products.xlsx');`
+
+### Part 25: Product sorting (admin)
+
+- Clickable column titles send `?sort=name&dir=asc`.
+- Allow only safe columns: check the value against an array before `orderBy`.
+
+---
+
+## Stage F: Public Shop (Parts 26-32)
+
+### Part 26: Shop product page
+
+```bash
+php artisan make:controller ShopController
+```
+
+- Create `resources/views/shop/index.blade.php` (use the template's shop grid).
+- Route: `Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');`
+- Load products: `Product::paginate(12)`.
+
+### Part 27: Product details page
+
+- Route: `/shop/{slug}` and method `details($slug)` using `firstOrFail()`.
+- Show gallery, price (show sale price and crossed regular price), stock status, related products (same category, exclude current).
+
+### Part 28: Sorting and products per page
+
+- Dropdown sends `?order=1` (newest), `2` (oldest), `3` (price low-high), `4` (price high-low).
+- Another dropdown sends `?size=12|24|48`.
+- Always use `->paginate($size)->withQueryString()`.
+
+### Part 29: Filter by brand
+
+- Show brands with checkboxes and the product count.
+- Use `whereIn('brand_id', $selectedBrands)`.
+
+### Part 30: Filter by category
+
+- Same idea with `category_id`. Also include subcategory ids when a parent category is chosen.
+
+### Part 31: Filter by price
+
+- Two inputs min and max (or a slider): `whereBetween('regular_price', [$min, $max])`.
+
+### Part 32: Search in shop
+
+- Search box in header sends `?q=chair` to the shop route.
+- `where('name','like',"%$q%")`.
+
+**Tip for Parts 28-32:** put all filters into one controller method. Each filter is a `when()` condition so they work together.
+
+---
+
+## Stage G: Shopping Cart (Parts 33-36)
+
+### Part 33: Create the cart service
+
+**Idea:** one class that holds all cart logic, plus a Facade so you can write `Cart::add(...)` anywhere.
+
+```bash
+php artisan make:class Services/CartService
+php artisan make:class Facades/Cart
+```
+
+- CartService keeps items in the session under one key. Each item has product id, name, price, quantity, image.
+- Methods to build: `add()`, `update()`, `remove()`, `clear()`, `items()`, `count()`, `subtotal()`.
+- Facade class extends `Illuminate\Support\Facades\Facade` and returns the service name from `getFacadeAccessor()`.
+- Register the service in `AppServiceProvider` as a singleton.
+
+### Part 34: Add to cart
+
+```bash
+php artisan make:controller CartController
+```
+
+- Route: `POST /cart/add` with product id and quantity.
+- Validate the product exists and is in stock. If the item is already in the cart, increase its quantity.
+- Update the header cart badge using `Cart::count()` (replace the fixed number 3 in the header).
+
+### Part 35: View cart
+
+- Route `GET /cart` shows the table: image, name, price, quantity, line total, remove button; and a totals box.
+- Show a friendly message if the cart is empty.
+
+### Part 36: Update cart quantity
+
+- Plus/minus buttons submit a small form (or use fetch) with new quantity.
+- Quantity less than 1 should become 1 (or remove the item).
+- Never trust prices from the browser. Read prices from the database each time.
+
+---
+
+## Common Mistakes Found in the Notes (Fix These)
+
+| Problem | Fix |
+| --- | --- |
+| Header links use .php (index.php, shop.php) | Use route names: `route('home.index')`, `route('shop.index')` |
+| Slider/category images use plain paths (assets/...) | Use `asset('assets/...')` |
+| Login 'remember' checkbox named remember\_me | Use `name='remember'` |
+| `@error('')` empty in login password | `@error('password')` |
+| `@error('mobie')` typo in register | `@error('mobile')` |
+| `:value='old(...)'` on plain input | `value='{{ old('email') }}'` |
+| AuthAdmin sends error message but no page shows it | Show `session('error')` on the login page |
+| Admin registered users: no one is ADM | Set `utype` to ADM manually in the database (or a seeder) |
+| migrate:refresh deletes all data | Use only in development |
+| Countdown timer date is 2025-12-31 (already past) | Change it to a future date |
+| Footer says Surfside Media, fake address and email | Replace with your shop info |
+
+## Checklist Before Starting a New Project
+
+- [ ] Install Laravel and Breeze, set `.env` database
+- [ ] Copy layout, assets, home page
+- [ ] Add `utype`, AuthAdmin middleware, admin and user pages
+- [ ] Build admin CRUD in order: Brand, Category, Product
+- [ ] Build public shop: list, details, sort, filters, search
+- [ ] Build cart, then (next steps) checkout, orders, payment, order status
+
+## Ideas for Next Parts
+
+- Wishlist (heart button)
+- Checkout and Orders table (orders, order\_items)
+- Payment (cash on delivery first, then a payment gateway)
+- Order status for admin (ordered, delivered, canceled)
+- Coupons, product reviews, contact page, slider management in admin
+- Deploy to a server (set APP\_ENV=production, APP\_DEBUG=false, run `php artisan config:cache`)
