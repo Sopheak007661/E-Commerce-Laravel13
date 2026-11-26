@@ -74,7 +74,11 @@
                                 </td>
                                 <td class="py-4 px-4 font-bold text-primary" data-label="Total">${{number_format($item->subtotal,2)}}</td>
                                 <td class="py-4 px-4" data-label="Action">
-                                    <button class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-trash-can text-xl"></i></button>
+                                    <form action="{{route('cart.remove',$item->rowId)}}" method="POST"  class="inline-block" >
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-trash-can text-xl"></i></button>
+                                     </form>
                                 </td>
                             </tr>
 
@@ -88,8 +92,11 @@
                 <div class="flex flex-col sm:flex-row justify-between items-center mb-12 gap-4">
                     <a href="{{route('shop.index')}}" class="bg-sky-800 text-white px-6 py-3 rounded hover:bg-primary transition w-full sm:w-auto text-center">Continue Shopping</a>
                     <div class="flex gap-4 w-full sm:w-auto">
-                        <a href="#" class="border border-gray-800 text-gray-800 px-6 py-3 rounded hover:bg-sky-800 hover:text-white transition w-full sm:w-auto text-center">Clear Cart</a>
-                        <a href="#" class="border border-gray-800 text-gray-800 px-6 py-3 rounded hover:bg-sky-800 hover:text-white transition w-full sm:w-auto text-center">Update Cart</a>
+                        <form action="{{route('cart.clear')}}" method="POST" class="w-full">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="border border-gray-800 text-gray-800 px-6 py-3 rounded hover:bg-sky-800 hover:text-white transition w-full sm:w-auto text-center">Clear Cart</button>
+                        </form>
                     </div>
                 </div>
     

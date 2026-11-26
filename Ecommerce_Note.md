@@ -1790,3 +1790,6 @@ cmd : php artisan make:controller ProductController
 # Part 35 -- View Cart ✔️
 
 # Part 36 -- Update cart Qunatity ✔️
+
+# Part 37: Delete and Clear Cart Item
+

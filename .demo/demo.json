@@ -3,5 +3,35 @@
   "title": "Demo",
   "description": "",
   "version": 3,
-  "scenes": []
+  "loop": true,
+  "scenes": [
+    {
+      "id": "scene-mwtzt23a-4bc8",
+      "title": "Scene 1",
+      "moves": [
+        {
+          "action": "create"
+        }
+      ]
+    },
+    {
+      "id": "demo-mwtzuoc7-lp1e",
+      "title": "Scene 1 (Copy)",
+      "moves": [
+        {
+          "action": "create"
+        }
+      ]
+    },
+    {
+      "id": "demo-mwtzur9g-4ysh",
+      "title": "Scene 1 (Copy) (Copy)",
+      "moves": [
+        {
+          "action": "create"
+        }
+      ],
+      "disabled": true
+    }
+  ]
 }
