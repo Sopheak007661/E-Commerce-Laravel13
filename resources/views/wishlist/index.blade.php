@@ -6,7 +6,7 @@
     <div class="relative z-10 text-center">
         <h2 class="text-4xl font-bold mb-2">Wishlist</h2>
         <ul class="flex justify-center space-x-2 text-sm">
-            <li><a href="route('home.index')}}" class="hover:text-primary">Home</a></li>
+            <li><a href="{{route('home.index')}}" class="hover:text-primary">Home</a></li>
             <li>/</li>
             <li class="text-primary">Wishlist</li>
         </ul>
@@ -61,10 +61,13 @@
                                 </td>
                                 <td class="py-4 px-4 font-bold text-primary" data-label="Total">$28.72</td>
                                 <td class="py-4 px-4" data-label="Add to Cart">
-                                    <button class="bg-sky-800 text-white px-4 py-2 rounded hover:bg-primary transition text-sm">Add to Cart</button>
+                                    <form action="{{route('wishlist.move.to.cart', $item->rowId)}}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="bg-sky-800 text-white px-4 py-2 rounded hover:bg-primary transition text-sm">Add to Cart</button>
+                                    </form>
                                 </td>
                                 <td class="py-4 px-4" data-label="Action">
-                                    <form action="{{route('wishlist.remove',$item->rowId)}}" method="POST" onsubmit="return confirm('Are you sure you want to remove this item from you wishlist ?')">
+                                    <form action="{{route('wishlist.remove', $item->rowId)}}" method="POST" onsubmit="return confirm('Are you sure you want to remove this item?')" >
                                         @csrf
                                         @method('DELETE')
                                         <button  type="submit" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-trash-can text-xl"></i></button>

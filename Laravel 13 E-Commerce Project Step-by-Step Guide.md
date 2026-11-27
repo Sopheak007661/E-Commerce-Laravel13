@@ -504,3 +504,60 @@ Route::delete('/wishlist/remove', [WishlistController::class, 'clear_wishlist'])
 - **HTTP method spoofing:** HTML forms only send `GET` or `POST`, so use `@csrf` and `@method('DELETE')` to match `Route::delete(...)`.
 - **Confirm before delete:** `onsubmit="return confirm(...)"` stops accidental removals.
 - **Next steps:** add a "Clear Wishlist" form that posts to `route('wishlist.clear')` with `@csrf` and `@method('DELETE')`, then wire the **Add to Cart** button (move to cart).
+
+
+ Part 41: Move Products from Wishlist to Cart
+
+- **Files touched:**
+  - `app/Http/Controllers/WishlistController.php` (`move_to_cart`)
+  - `app/Services/CartService.php` (`get`)
+  - `routes/web.php` (`wishlist.move.to.cart`)
+  - `resources/views/wishlist/index.blade.php` (Add to Cart form in the Add to Cart column)
+- **Move to cart flow:** get the item from the `wishlist` instance by `$rowId`, remove it from the wishlist, add it to the `cart` instance with the same id, name, qty and price, then redirect back with a `success` flash message.
+- **Controller:**
+
+```php
+public function move_to_cart(string $rowId)
+{
+    $item = Cart::instance('wishlist')->get($rowId);
+    Cart::instance('wishlist')->remove($rowId);
+
+    Cart::instance('cart')->add($item->id, $item->name, $item->qty, $item->price)
+        ->associate('App\Models\Product');
+
+    return back()->with('success', 'Product moved to cart successfully!');
+}
+```
+
+- **Service (`CartService`):** added a `get()` helper that returns one cart item by `$rowId`, or `null` if it is not found.
+
+```php
+public function get(string $rowId): ?object
+{
+    return $this->getCart()->get($rowId);
+}
+```
+
+- **Route:**
+
+```php
+Route::post('/wishlist/move-to-cart/{rowId}', [WishlistController::class, 'move_to_cart'])->name('wishlist.move.to.cart');
+```
+
+- **View (Add to Cart button):** wrap the button in a form that posts to `route('wishlist.move.to.cart', $item->rowId)`.
+
+```php
+<td class="py-4 px-4" data-label="Add to Cart">
+    <form action="{{ route('wishlist.move.to.cart', $item->rowId) }}" method="POST">
+        @csrf
+        <button type="submit" class="bg-sky-800 text-white px-4 py-2 rounded hover:bg-primary transition text-sm">Add to Cart</button>
+    </form>
+</td>
+```
+
+- **Why `POST`:** moving to cart changes data (adds to cart and removes from wishlist), so it uses `POST` with `@csrf`. No `@method` spoofing is needed.
+- **Order matters:** call `get($rowId)` **before** `remove($rowId)`. Once removed, the item is gone and its data can't be read.
+- **`associate('App\Models\Product')`:** links the cart row to the `Product` model, so `$item->model` works in the cart view (image, slug, etc.), the same way it does in the wishlist.
+- **Same product already in cart:** `add()` with the same product id merges into the existing row and increases its quantity instead of creating a duplicate row.
+- **Two instances:** `wishlist` and `cart` are separate instances of the same package, so each one has its own rows and its own `rowId` values.
+- **Next steps:** show the cart item count in the header after a move, and add a message or style for the `success` flash on the wishlist page.
