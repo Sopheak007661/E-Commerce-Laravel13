@@ -28,6 +28,9 @@ Route::delete('/cart/clear',[CartController::class,'clear_cart'])->name('cart.cl
 
 Route::get('/wishlist',[WishlistController::class,'index'])->name('wishlist.index');
 Route::post('/wishlist/add',[WishlistController::class,'add_to_wishlist'])->name('wishlist.add');
+Route::delete('/wishlist/remove/{rowId}',[WishlistController::class,'remove_from_wishlist'])->name('wishlist.remove');
+Route::delete('/wishlist/remove',[WishlistController::class,'clear_wishlist'])->name('wishlist.clear');
+
 
 Route::get('/dashboard', function () {
     return view('dashboard');

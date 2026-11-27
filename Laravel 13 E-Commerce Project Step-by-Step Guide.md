@@ -474,3 +474,33 @@ php artisan make:controller CartController
   - Price: `number_format($item->price, 2)`
   - Quantity: `{{ $item->qty }}`
 - **Next steps:** the **Add to Cart** and trash buttons are not wired yet. Add them in the next part (remove from wishlist, clear wishlist, move to cart).
+
+
+### Part 40: Remove Product from Wishlist
+
+- **Files touched:**
+  - `app/Http/Controllers/WishlistController.php` (`remove_from_wishlist`, `clear_wishlist`)
+  - `routes/web.php` (`wishlist.remove`, `wishlist.clear`)
+  - `resources/views/wishlist/index.blade.php` (trash button form in the Action column)
+- **Remove single item:** `Cart::instance('wishlist')->remove($rowId)` deletes one row by `$rowId` and redirects back with a `success` flash message.
+- **Clear full wishlist:** `Cart::instance('wishlist')->destroy()` wipes all items from the `wishlist` instance and redirects back with a `success` flash message.
+- **Routes:**
+
+```php
+Route::delete('/wishlist/remove/{rowId}', [WishlistController::class, 'remove_from_wishlist'])->name('wishlist.remove');
+Route::delete('/wishlist/remove', [WishlistController::class, 'clear_wishlist'])->name('wishlist.clear');
+```
+
+- **View (trash button):** wrap the button in a form that posts to `route('wishlist.remove', $item->rowId)`.
+
+```php
+<form action="{{ route('wishlist.remove', $item->rowId) }}" method="POST" onsubmit="return confirm('Are you sure you want to remove this item from your wishlist?')">
+    @csrf
+    @method('DELETE')
+    <button type="submit" class="text-gray-400 hover:text-red-500 transition"><i class="fa-solid fa-trash-can text-xl"></i></button>
+</form>
+```
+
+- **HTTP method spoofing:** HTML forms only send `GET` or `POST`, so use `@csrf` and `@method('DELETE')` to match `Route::delete(...)`.
+- **Confirm before delete:** `onsubmit="return confirm(...)"` stops accidental removals.
+- **Next steps:** add a "Clear Wishlist" form that posts to `route('wishlist.clear')` with `@csrf` and `@method('DELETE')`, then wire the **Add to Cart** button (move to cart).
