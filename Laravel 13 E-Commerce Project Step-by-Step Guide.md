@@ -453,3 +453,24 @@ php artisan make:controller CartController
   - Use `?:` instead of `??` for the price fallback, because `??` only handles `null`.
   - Check for duplicates before `add()`, otherwise the package increases the quantity.
 - **Next steps:** link the header heart (`href="#"`) to a wishlist page and show the `success` flash message on the shop page.
+
+### Part 39: Show All Wishlist Products
+
+- **Files touched:**
+  - `resources/views/wishlist/index.blade.php` (new folder `wishlist` and new file)
+  - `app/Http/Controllers/WishlistController.php` (`index`)
+  - `routes/web.php` (`wishlist.index`)
+  - `resources/views/layouts/app.blade.php` (header heart link)
+- **Create the view:** make the folder `resources/views/wishlist/` and the file `index.blade.php` inside it.
+- **Route:** `Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');`
+- **Controller:** `index()` returns `view('wishlist.index')`.
+- **Header link:** change the heart `href="#"` to `href="{{ route('wishlist.index') }}"`.
+- **Empty state:** `@if(Cart::instance('wishlist')->content()->count() == 0)` shows the "no items" block, and `@else` shows the table.
+- **Loop the items:** `@foreach (Cart::instance('wishlist')->content() as $item)`, then get the product with `Cart::instance('wishlist')->model($item->rowId)`.
+- **Skip missing products:** wrap each row in `@if($product)`, so deleted products don't break the table.
+- **Row data:**
+  - Image: `asset('uploads/products/thumbnails/' . $product->image)`
+  - Name and link: `$item->name` with `route('shop.product.details', $product->slug)`
+  - Price: `number_format($item->price, 2)`
+  - Quantity: `{{ $item->qty }}`
+- **Next steps:** the **Add to Cart** and trash buttons are not wired yet. Add them in the next part (remove from wishlist, clear wishlist, move to cart).

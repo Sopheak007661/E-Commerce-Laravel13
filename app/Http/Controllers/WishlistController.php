@@ -7,6 +7,11 @@ use App\Facades\Cart;
 
 class WishlistController extends Controller
 {
+    public function index()
+    {
+        return view('wishlist.index');
+    }
+    
     public function add_to_wishlist(Request $request){
         $request ->validate([
             'product_id' => 'required',
@@ -16,7 +21,8 @@ class WishlistController extends Controller
         ]);
 
         Cart::instance('wishlist')->add($request->product_id , $request->name , $request->quantity, $request->price)
-            -> associate('App\Models\{product');
+            -> associate('\App\Models\Product');
         return back() -> with('success' , 'Product added to wishlist successfully');
     }
+
 }
