@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ config('app.name', 'Laravel') }}</title>
-    <link href="{{asset('favicon.ico')}}" rel="shortcut icon" type="image/x-icon" />
+    <link href="{{asset('assets/images/logo.jpg')}}" rel="shortcut icon" type="image/x-icon" />
     <script src="https://cdn.tailwindcss.com"></script>
 
     <script>
@@ -47,17 +47,17 @@
             <div class="flex justify-between items-center">
                 <div class="w-1/4">
                     <a href="index.php">
-                        <img src="{{asset('assets/images/logo.png')}}" alt="Logo" class="max-w-[200px]" />
+                        <img src="https://i.ibb.co/chTsqTqc/download-26.png" alt="Logo" class="max-w-[200px] w-[100px]" />
                     </a>
                 </div>
 
                 <div class="w-1/2 flex justify-center">
                     <nav>
                         <ul class="flex space-x-8 font-medium text-gray-700">
-                            <li><a href="index.php" class="hover:text-primary transition">Home</a></li>
+                            <li><a href="{{route('home.index')}}" class="hover:text-primary transition">Home</a></li>
                             <li><a href="{{route('shop.index')}}" class="hover:text-primary transition">Shop</a></li>
                             <li><a href="{{route('cart.index')}}" class="hover:text-primary transition">Cart</a></li>
-                            <li><a href="wishlist.php" class="hover:text-primary transition">Wishlist</a></li>
+                            <li><a href="{{route('wishlist.index')}}" class="hover:text-primary transition">Wishlist</a></li>
                             <li><a href="contact.php" class="hover:text-primary transition">Contact</a></li>
                         </ul>
                     </nav>
@@ -209,7 +209,6 @@
 
 
     <!-- Main Content Start -->
-
 
     {{ $slot }}
 

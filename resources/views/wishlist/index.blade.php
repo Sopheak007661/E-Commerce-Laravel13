@@ -18,8 +18,7 @@
             @if(Cart::instance('wishlist')->content()->count()==0)
             <div id="empty-wishlist" class="text-center py-10">
                 <h2 class="text-2xl font-bold mb-4">There are no more items in your wishlist</h2>
-                <img src="assets/images/wishlist.png" alt="Empty Wishlist" class="mx-auto mb-6 max-w-xs">
-                <p class="text-gray-500 mb-6">No item found in your wishlist</p>
+                <img src="{{ asset('assets/images/wishlist.png') }}" alt="Empty Wishlist" class="mx-auto mb-6 max-w-xs">                <p class="text-gray-500 mb-6">No item found in your wiishlist</p>
                 <a href="{{route('shop.index')}}" class="inline-block bg-primary text-white px-6 py-2 rounded hover:bg-blue-600 transition">Wishlist Now</a>
             </div>
 

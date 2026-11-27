@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ config('app.name', 'Laravel') }}</title>
-    <link href="{{asset('favicon.ico')}}" rel="shortcut icon" type="image/x-icon" />
+    <link href="{{asset('assets/images/logo.jpg')}}" rel="shortcut icon" type="image/x-icon" />
     <script src="https://cdn.tailwindcss.com"></script>
 
     <script>
@@ -49,7 +49,7 @@
             <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-sky-800 text-gray-100 transition-transform transform -translate-x-full md:translate-x-0 md:static md:inset-0 flex flex-col">
                 <div class="flex items-center justify-center h-16 bg-sky-700 border-b border-gray-800">
                     <a href='{{route("admin.index")}}'>
-                        <img src="{{asset('assets/images/logo-w.png')}}" alt="Logo" class="h-12" />
+                        <img src="https://i.ibb.co/chTsqTqc/download-26.png" alt="Logo" class="h-12 w-40" />
                     </a>
                 </div>
 
@@ -139,7 +139,7 @@
                             <p class="text-sm font-bold text-gray-700">{{Auth::user()->name}}</p>
                             <p class="text-xs text-gray-500">Super Admin</p>
                         </div>
-                        <img src="https://i.pravatar.cc/150?img=12" alt="Admin" class="w-10 h-10 rounded-full border border-gray-200">
+                        <a href="{{route('profile.edit')}}"><img src="https://i.ibb.co/ksjmvRsc/6203891134942088357-121.gif" alt="Admin" class="w-10 h-10 rounded-full border border-gray-200"></a>
                     </div>
                 </div>
             </header>
