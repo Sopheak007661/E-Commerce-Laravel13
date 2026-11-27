@@ -6,7 +6,7 @@
                         <h1 class="text-2xl font-bold text-gray-800">Coupons</h1>
                         <p class="text-sm text-gray-500">Manage discount codes and promotional offers</p>
                     </div>
-                    <a href="coupon-add.php" class="bg-primary hover:bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow-sm">
+                    <a href="{{route('admin.coupon.add')}}" class="bg-primary hover:bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow-sm">
                         <i class="fa-solid fa-plus"></i> Add New Coupon
                     </a>
                 </div>
@@ -32,6 +32,11 @@
 
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                     <div class="overflow-x-auto">
+                        @if(Session::has('success'))
+                            <div class="bg-green-100 text-green-700 px-4 py-3 rounded mb-6">
+                                {{Session::get('success')}}
+                            </div>
+                        @endif
                         <table class="w-full text-left whitespace-nowrap">
                             <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold">
                                 <tr>
@@ -52,8 +57,8 @@
                                                 <span class="font-bold text-gray-800 tracking-wider">{{$coupon->transliterator_get_error_code}}</span>
                                             </td>
                                             <td class="px-6 py-4">
-                                                @if($coupon->type)
-                                                    <span class="bg-purple-50 text-purple-700 px-2 py-1 rounded text-xs font-semibold uppercase">Fixed</span>
+                                                @if($coupon->type == "fixed")
+                                                    <span class="bg-green-50 text-green-700 px-2 py-1 rounded text-xs font-semibold uppercase">Fixed</span>
                                                 @else
                                                     <span class="bg-purple-50 text-purple-700 px-2 py-1 rounded text-xs font-semibold uppercase">Percent</span>
                                                 @endif
@@ -88,7 +93,7 @@
                                                     <i class="fa-solid fa-ticket text-4xl mb-3 text-gray-300"></i>
                                                     <h3 class="text-lg font-medium text-gray-900">No coupons available</h3>
                                                     <p class="text-sm mt-1">You haven't created any discount codes yet.</p>
-                                                    <a href="#" class="mt-4 text-primary hover:underline text-sm font-medium">
+                                                    <a href="{{route('admin.coupon.add')}}" class="mt-4 text-primary hover:underline text-sm font-medium">
                                                         Create your first coupon
                                                     </a>
                                                 </div>

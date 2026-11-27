@@ -562,9 +562,6 @@ Route::post('/wishlist/move-to-cart/{rowId}', [WishlistController::class, 'move_
 - **Two instances:** `wishlist` and `cart` are separate instances of the same package, so each one has its own rows and its own `rowId` values.
 - **Next steps:** show the cart item count in the header after a move, and add a message or style for the `success` flash on the wishlist page.
 
-Part 42 Admin create coupons Page 
-1. php artisan make:model Coupon -m
-2. php artisan make:controller CouponController
 
 
 
@@ -648,3 +645,75 @@ Route::get('/admin/coupons', [CouponController::class, 'coupons'])->name('admin.
 
 - **View columns:** use `{{ $coupon->code }}` for the code, and `@if($coupon->type == 'fixed')` to show the Fixed or Percent badge. A bare `@if($coupon->type)` is always true for any non-empty string.
 - **Next steps:** add the "Add New Coupon" page (form, store method, and validation) and the edit and delete actions.
+
+
+
+### Part 43: Admin Add New Coupon
+
+- **Files touched:**
+  - `app/Http/Controllers/CouponController.php` (`coupon_add`, `coupon_store`)
+  - `routes/web.php` (`admin.coupon.add`, `admin.coupon.store`)
+  - `resources/views/admin/coupon-add.blade.php` (new, the add coupon form)
+  - `resources/views/admin/coupons.blade.php` (success message and Add New Coupon links)
+- **Flow to create a coupon:**
+  1. Admin clicks **Add New Coupon** on the coupons page.
+  2. `GET /admin/coupon-add` runs `coupon_add()` and shows the form.
+  3. Admin fills the form and clicks **Save Coupon**.
+  4. `POST /admin/coupon-store` runs `coupon_store()`.
+  5. The controller validates the data, saves the coupon, and redirects back to the coupons list with a `success` message.
+  6. If validation fails, Laravel goes back to the form, shows the errors, and keeps the old input.
+- **Routes (inside the admin auth group):**
+
+```php
+Route::get('/admin/coupon-add', [CouponController::class, 'coupon_add'])->name('admin.coupon.add');
+Route::post('/admin/coupon-store', [CouponController::class, 'coupon_store'])->name('admin.coupon.store');
+```
+
+- **Controller:**
+
+```php
+public function coupon_add()
+{
+    return view('admin.coupon-add');
+}
+
+public function coupon_store(Request $request)
+{
+    $request->validate([
+        'code'        => 'required|string|unique:coupons,code',
+        'type'        => 'required|in:fixed,percent',
+        'value'       => 'required|numeric|min:0',
+        'cart_value'  => 'required|numeric|min:0',
+        'expiry_date' => 'required|date',
+    ]);
+
+    $coupon = new Coupon();
+    $coupon->code = $request->code;
+    $coupon->type = $request->type;
+    $coupon->value = $request->value;
+    $coupon->cart_value = $request->cart_value;
+    $coupon->expiry_date = $request->expiry_date;
+    $coupon->save();
+
+    return redirect()->route('admin.coupons')->with('success', 'Coupon created successfully');
+}
+```
+
+- **Validation rules:**
+  - `code`: required, text, and `unique:coupons,code` so no two coupons share a code.
+  - `type`: must be `fixed` or `percent`.
+  - `value` and `cart_value`: required numbers, not below 0.
+  - `expiry_date`: required, must be a valid date.
+- **View (`coupon-add.blade.php`):** a form with `@csrf` that posts to `route('admin.coupon.store')`. Each field uses `old('field')` to keep the typed value and `@error('field')` to show its error message.
+- **Coupons page (`coupons.blade.php`):** the **Add New Coupon** button and the "Create your first coupon" link both use `route('admin.coupon.add')`. A success box shows the flash message:
+
+```php
+@if(Session::has('success'))
+    <div class="bg-green-100 text-green-700 px-4 py-3 rounded mb-6">
+        {{ Session::get('success') }}
+    </div>
+@endif
+```
+
+- **Mass assignment:** the controller sets each field one by one, so `$fillable` is not needed in the `Coupon` model.
+- **Next steps:** add the edit and delete actions for coupons.
