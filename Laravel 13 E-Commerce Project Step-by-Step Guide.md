@@ -434,4 +434,22 @@ php artisan make:controller CartController
   - Show an empty-cart state/message when all items are removed or cleared so the table doesn't look broken.
   - Avoid hardcoding static labels like `Size: S` / `Color: White` or showing strikethrough `$item->price` unless actual variant/sale data supports it.
 
-  
+  ### Part 38: Add Product to Wishlist
+
+- **Files touched:**
+  - `app/Http/Controllers/WishlistController.php` (`add_to_wishlist`)
+  - `routes/web.php` (`wishlist.add`)
+  - `resources/views/shop/index.blade.php` (heart button form)
+  - `resources/views/layouts/app.blade.php` (header wishlist counter)
+- **Create controller:** `php artisan make:controller WishlistController`
+- **Separate cart instance:** `Cart::instance('wishlist')` keeps wishlist items apart from `Cart::instance('cart')`.
+- **Add to wishlist:** validate `product_id`, `name`, `quantity`, `price`, skip if the product is already in the wishlist, then `add(...)->associate('App\Models\Product')` and redirect back with a `success` flash message.
+- **Route:** `Route::post('/wishlist/add', [WishlistController::class, 'add_to_wishlist'])->name('wishlist.add');`
+- **Shop view:** a POST form with `@csrf` and hidden fields (`product_id`, `name`, `quantity`, `price`) on the heart button. Show `fa-solid fa-heart` if the product is already in the wishlist, otherwise `fa-regular fa-heart`.
+- **Header counter:** `{{ Cart::instance('wishlist')->count() }}` in the heart badge.
+- **Bugs to watch out for:**
+  - `associate('App\Models\{product')` is a typo. Use `'App\Models\Product'`.
+  - `regualer_price` is misspelled. Use `regular_price`.
+  - Use `?:` instead of `??` for the price fallback, because `??` only handles `null`.
+  - Check for duplicates before `add()`, otherwise the package increases the quantity.
+- **Next steps:** link the header heart (`href="#"`) to a wishlist page and show the `success` flash message on the shop page.
