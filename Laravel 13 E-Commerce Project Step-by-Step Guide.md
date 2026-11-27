@@ -786,3 +786,62 @@ public function coupon_update(Request $request, int $coupon_id)
 ```
 
 - **Next steps:** add the delete action for coupons (the delete button is still hardcoded with `'SUMMER20', 1`).
+
+
+
+### Part 45: Admin Delete Coupon
+
+- **Files touched:**
+  - `app/Http/Controllers/CouponController.php` (`coupon_delete`)
+  - `routes/web.php` (`admin.coupon.delete`)
+  - `resources/views/admin/coupons.blade.php` (delete form, confirm modal, JavaScript)
+- **Flow to delete a coupon:**
+  1. Admin clicks the **Delete** (trash) icon on a coupon row.
+  2. JavaScript `deleteCoupon()` opens a confirm modal with the coupon code.
+  3. Admin clicks **Cancel** to close the modal, or **Delete** to confirm.
+  4. On confirm, JavaScript submits the hidden form `delete-form-{id}`.
+  5. `DELETE /admin/coupon-delete/{coupon_id}` runs `coupon_delete()`.
+  6. The controller deletes the coupon and redirects to the coupons list with a `success` message.
+- **Route (inside the admin auth group):**
+
+```php
+Route::delete('/admin/coupon-delete/{coupon_id}', [CouponController::class, 'coupon_delete'])->name('admin.coupon.delete');
+```
+
+- **Controller:**
+
+```php
+public function coupon_delete($coupon_id)
+{
+    $coupon = Coupon::findOrFail($coupon_id);
+    $coupon->delete();
+    return redirect()->route('admin.coupons')->with('success', 'Coupon deleted successfully.');
+}
+```
+
+- **Key points:**
+  - `findOrFail()` returns a 404 page if the coupon id does not exist.
+  - The form needs `@csrf` and `@method('DELETE')`, because HTML forms only support GET and POST.
+  - The trash button is `type="button"`, so it does not submit the form directly. It only opens the modal.
+  - Each row has its own form with a unique id (`delete-form-{{ $coupon->id }}`), so JavaScript can find the right form.
+- **View (`coupons.blade.php`):**
+  - Delete form in each row:
+
+```php
+<form id="delete-form-{{ $coupon->id }}" action="{{ route('admin.coupon.delete', ['coupon_id' => $coupon->id]) }}" method="POST">
+    @csrf
+    @method('DELETE')
+    <button type="button" onclick="deleteCoupon(this, '{{ $coupon->code }}', {{ $coupon->id }})" title="Delete">
+        <i class="fa-solid fa-trash"></i>
+    </button>
+</form>
+```
+
+  - Confirm modal (`#deleteModal`): hidden by default, shows the coupon code in `#delete-coupon-code`, with **Cancel** and **Delete** buttons.
+- **JavaScript:**
+  - `deleteCoupon(button, code, id)`: saves the id, puts the code in the modal text, and shows the modal.
+  - `closeModal()`: hides the modal and clears the saved id.
+  - **Cancel** button: calls `closeModal()`.
+  - **Delete** button: finds `delete-form-{id}` and calls `form.submit()`.
+- **Result:** the coupon CRUD is complete: list, add, edit, and delete.
+- **Next steps:** apply coupons in the cart and checkout.
