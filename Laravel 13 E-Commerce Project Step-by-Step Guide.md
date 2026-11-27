@@ -717,3 +717,72 @@ public function coupon_store(Request $request)
 
 - **Mass assignment:** the controller sets each field one by one, so `$fillable` is not needed in the `Coupon` model.
 - **Next steps:** add the edit and delete actions for coupons.
+
+
+
+### Part 44: Admin Edit Coupon
+
+- **Files touched:**
+  - `app/Http/Controllers/CouponController.php` (`coupon_edit`, `coupon_update`)
+  - `routes/web.php` (`admin.coupon.edit`, `admin.coupon.update`)
+  - `resources/views/admin/coupon-edit.blade.php` (new, the edit coupon form)
+  - `resources/views/admin/coupons.blade.php` (Edit button link)
+- **Flow to edit a coupon:**
+  1. Admin clicks the **Edit** (pen) icon on a coupon row.
+  2. `GET /admin/coupon-edit/{coupon_id}` runs `coupon_edit()` and shows the form filled with the coupon data.
+  3. Admin changes the data and clicks **Save Coupon**.
+  4. `PUT /admin/coupon-update/{coupon_id}` runs `coupon_update()`.
+  5. The controller validates, updates the coupon, and redirects to the coupons list with a `success` message.
+  6. If validation fails, Laravel goes back to the form with errors and old input.
+- **Routes (inside the admin auth group):**
+
+```php
+Route::get('/admin/coupon-edit/{coupon_id}', [CouponController::class, 'coupon_edit'])->name('admin.coupon.edit');
+Route::put('/admin/coupon-update/{coupon_id}', [CouponController::class, 'coupon_update'])->name('admin.coupon.update');
+```
+
+- **Controller:**
+
+```php
+public function coupon_edit(int $coupon_id)
+{
+    $coupon = Coupon::findOrFail($coupon_id);
+    return view('admin.coupon-edit', compact('coupon'));
+}
+
+public function coupon_update(Request $request, int $coupon_id)
+{
+    $request->validate([
+        'code'        => 'required|string|unique:coupons,code,' . $coupon_id,
+        'type'        => 'required|in:fixed,percent',
+        'value'       => 'required|numeric|min:0',
+        'cart_value'  => 'required|numeric|min:0',
+        'expiry_date' => 'required|date',
+    ]);
+
+    $coupon = Coupon::findOrFail($coupon_id);
+    $coupon->code = $request->code;
+    $coupon->type = $request->type;
+    $coupon->value = $request->value;
+    $coupon->cart_value = $request->cart_value;
+    $coupon->expiry_date = $request->expiry_date;
+    $coupon->save();
+
+    return redirect()->route('admin.coupons')->with('success', 'Coupon updated successfully!');
+}
+```
+
+- **Key points:**
+  - `findOrFail()` returns a 404 page if the coupon id does not exist.
+  - `unique:coupons,code,{id}` ignores the current coupon, so saving without changing the code does not fail.
+  - The form needs `@csrf` and `@method('PUT')`, because HTML forms only support GET and POST.
+- **View (`coupon-edit.blade.php`):** same form as the add page, posting to `route('admin.coupon.update', ['coupon_id' => $coupon->id])`. Each field uses `old('field', $coupon->field)`: it shows the old input after a failed validation, otherwise the saved value. The `type` select marks the saved option with `selected`.
+- **Coupons page (`coupons.blade.php`):** the Edit button links to:
+
+```php
+<a href="{{ route('admin.coupon.edit', ['coupon_id' => $coupon->id]) }}">
+    <i class="fa-solid fa-pen-to-square"></i>
+</a>
+```
+
+- **Next steps:** add the delete action for coupons (the delete button is still hardcoded with `'SUMMER20', 1`).
