@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CouponController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
@@ -92,6 +93,9 @@ Route::middleware([AuthAdmin::class])->group(function(){ //==========
     Route::delete('/admin/produts-bulk-delete',[ProductController::class,'productBulkDelete']) -> name('admin.product.bulk.delete');
     // Export products into excel
     Route::get('/admin/produts-export',[ProductController::class,'productExport']) -> name('admin.product.export');
+
+//4==============================
+    Route::get('/admin/coupons',[CouponController::class,'coupons'])->name('admin.coupons');
 });
 
 require __DIR__.'/auth.php';

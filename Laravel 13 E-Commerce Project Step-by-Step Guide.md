@@ -506,7 +506,7 @@ Route::delete('/wishlist/remove', [WishlistController::class, 'clear_wishlist'])
 - **Next steps:** add a "Clear Wishlist" form that posts to `route('wishlist.clear')` with `@csrf` and `@method('DELETE')`, then wire the **Add to Cart** button (move to cart).
 
 
- Part 41: Move Products from Wishlist to Cart
+### Part 41: Move Products from Wishlist to Cart
 
 - **Files touched:**
   - `app/Http/Controllers/WishlistController.php` (`move_to_cart`)
@@ -561,3 +561,90 @@ Route::post('/wishlist/move-to-cart/{rowId}', [WishlistController::class, 'move_
 - **Same product already in cart:** `add()` with the same product id merges into the existing row and increases its quantity instead of creating a duplicate row.
 - **Two instances:** `wishlist` and `cart` are separate instances of the same package, so each one has its own rows and its own `rowId` values.
 - **Next steps:** show the cart item count in the header after a move, and add a message or style for the `success` flash on the wishlist page.
+
+Part 42 Admin create coupons Page 
+1. php artisan make:model Coupon -m
+2. php artisan make:controller CouponController
+
+
+
+ ### Part 42: Admin Create Coupons Page
+
+- **Files touched:**
+  - `app/Models/Coupon.php` (new, `php artisan make:model Coupon -m`)
+  - `database/migrations/2026_11_27_050351_create_coupons_table.php` (new, created with the model)
+  - `app/Http/Controllers/CouponController.php` (new, `php artisan make:controller CouponController`)
+  - `routes/web.php` (`admin.coupons`)
+  - `resources/views/admin/coupons.blade.php` (new, coupons list page)
+  - `resources/views/layouts/admin.blade.php` (Coupons link in the sidebar)
+- **Commands:**
+
+```bash
+php artisan make:model Coupon -m
+php artisan make:controller CouponController
+php artisan migrate
+```
+
+- **`-m` flag:** creates the model and its migration together, so `Coupon` and the `coupons` table are made in one command.
+- **Migration:**
+
+```php
+Schema::create('coupons', function (Blueprint $table) {
+    $table->id();
+    $table->string('code')->unique();
+    $table->enum('type', ['fixed', 'percent']);
+    $table->decimal('value');
+    $table->decimal('cart_value');
+    $table->date('expiry_date')->default(DB::raw("(DATE(CURRENT_TIMESTAMP))"));
+    $table->timestamps();
+});
+```
+
+- **Columns:**
+  - `code`: the coupon code, `unique()` so no two coupons share one.
+  - `type`: `fixed` (amount off) or `percent` (percentage off).
+  - `value`: the discount amount or percentage.
+  - `cart_value`: the minimum cart total needed to use the coupon.
+  - `expiry_date`: defaults to today's date.
+- **DB import:** `DB::raw(...)` needs `use Illuminate\Support\Facades\DB;` at the top of the migration.
+- **Controller:**
+
+```php
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Coupon;
+
+class CouponController extends Controller
+{
+    public function coupons()
+    {
+        $coupons = Coupon::orderBy('expiry_date', 'DESC')->paginate(12);
+        return view('admin.coupons', compact('coupons'));
+    }
+}
+```
+
+- **Controller logic:** gets all coupons ordered by `expiry_date` (newest first), splits them into pages of 12 with `paginate(12)`, and sends them to the `admin.coupons` view.
+- **Column name must match:** `orderBy('expiry_date', ...)` must use the exact column name from the migration, with an underscore. A wrong name (for example `expiry-data`) throws an SQL error.
+- **Route (inside the admin auth group):**
+
+```php
+Route::get('/admin/coupons', [CouponController::class, 'coupons'])->name('admin.coupons');
+```
+
+- **View:** `coupons.blade.php` is in `resources/views/admin/`, so it is loaded as `admin.coupons`. It uses `@forelse ... @empty ... @endforelse` to show the table, or a "No coupons available" row when there are none.
+- **Pagination:** `{{ $coupons->links() }}` shows the page links under the table.
+- **Sidebar link (`layouts/admin.blade.php`):**
+
+```php
+<a href="{{ route('admin.coupons') }}" class="nav-link flex items-center gap-3 px-4 py-2.5 text-gray-100 hover:text-white hover:bg-gray-800 rounded-lg transition">
+    <i class="fa-solid fa-ticket w-5 text-center"></i>
+    <span>Coupons</span>
+</a>
+```
+
+- **View columns:** use `{{ $coupon->code }}` for the code, and `@if($coupon->type == 'fixed')` to show the Fixed or Percent badge. A bare `@if($coupon->type)` is always true for any non-empty string.
+- **Next steps:** add the "Add New Coupon" page (form, store method, and validation) and the edit and delete actions.
