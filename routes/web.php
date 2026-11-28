@@ -18,8 +18,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/',[HomeController::class,'index'])->name('home.index'); //==========
 
-Route::get('/shop',[ ShopController::class,'index']) -> name ('shop.index');
-Route::get('/shop/{slug}',[ ShopController::class,'productDetails']) -> name ('shop.product.details');
+Route::get('/shop',[ShopController::class,'index']) -> name ('shop.index');
+Route::get('/shop/{slug}',[ShopController::class,'productDetails']) -> name ('shop.product.details');
+Route::get('/shop-search', function () {
+    return view('shop.search'); 
+    })->name('shop.search.product');
 Route::get('/cart',[CartController::class,'index'])->name('cart.index');
 Route::post('/cart/add',[CartController::class,'add_to_cart'])->name('cart.add');
 Route::put('/cart/update',[CartController::class,'update_cart'])->name('cart.update');

@@ -66,11 +66,18 @@
                 <div class="w-1/4 flex justify-end items-center space-x-6">
                     <div class="relative group">
                         <button class="text-2xl hover:text-primary"><i class="fa-solid fa-magnifying-glass"></i></button>
-                        <div class="absolute right-0 mt-2 w-64 bg-white border shadow-lg p-3 rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-                            <form class="flex">
-                                <input type="text" placeholder="Search..." class="w-full border p-2 text-sm outline-none focus:border-primary" />
-                                <button class="p-2 text-primary"><i class="fa-solid fa-magnifying-glass"></i></button>
+                        <div class="absolute right-0 mt-2 w-64 bg-white border shadow-lg p-3 rounded opacity-0 group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                            
+                            <form id="form-filter" method="GET" action="{{route('shop.index')}}" >
+                                <div class="flex flex-col lg:flex-row gap-8">
+                                        <div class="bg-gray-50 p-6 rounded-lg border">
+                                            <form class="relative">
+                                                <input type="text" name="search" value="{{request('search')}}" placeholder="Search product..." class="w-full border p-3 rounded focus:outline-none focus:border-primary pr-10">
+                                             </form>
+                                        </div>
+                                </div>
                             </form>
+
                         </div>
                     </div>
 
@@ -133,20 +140,29 @@
                 </button>
 
                 <a href="index.php">
-                    <img src="{{asset('assets/images/logo.png')}}" alt="Logo" class="max-w-[120px]" />
+                    <img src="https://i.ibb.co/chTsqTqc/download-26.png" alt="Logo" class=" mr-20 max-w-[120px]" />
                 </a>
 
-                <div class="flex items-center space-x-5">
-                    <a href="wishlist.php" class="text-xl hover:text-primary">
+                 <div class="relative  group pb-2 ">
+                        <a href="{{route('shop.search.product')}}" class="text-2xl hover:text-primary"><i class="fa-solid fa-magnifying-glass"></i></a>
+                </div>
+
+                    <a href="{{route('wishlist.index')}}" class="text-2xl hover:text-primary relative">
                         <i class="fa-regular fa-heart"></i>
+                        <span class="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                            {{Cart::instance('wishlist')->count()}}
+                        </span>
                     </a>
 
-                    <a href="cart.php" class="text-xl hover:text-primary relative">
+                    <a href="{{route('cart.index')}}" class="text-2xl hover:text-primary relative">
                         <i class="fa-solid fa-bag-shopping"></i>
-                        <span class="absolute -top-2 -right-2 bg-primary text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">3</span>
+                        <span class="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                            {{Cart::instance('cart')->count()}}
+                        </span>
                     </a>
 
                     <div class="relative group">
+                        
                         <button class="text-2xl hover:text-primary">
                             @auth
                             <span class="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-full font-bold uppercase text-lg shadow-sm">
@@ -175,19 +191,7 @@
                             @endguest
                         </ul>
                     </div>
-                </div>
             </div>
-
-            <div class="pb-2">
-                <form action="shop.php" method="GET" class="relative">
-                    <input type="text" name="q" placeholder="Search for products..."
-                        class="w-full bg-gray-100 border-none px-4 py-2.5 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none">
-                    <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                    </button>
-                </form>
-            </div>
-        </div>
     </header>
 
     <div id="mobile-sidebar" class="fixed inset-y-0 left-0 w-64 bg-white shadow-2xl transform -translate-x-full transition-transform duration-300 z-[60]">
@@ -197,11 +201,11 @@
         </div>
         <nav class="p-4">
             <ul class="space-y-4">
-                <li><a href="index.php" class="block hover:text-primary">Home</a></li>
-                <li><a href="shop.php" class="block hover:text-primary">Shop</a></li>
-                <li><a href="cart.php" class="block hover:text-primary">Cart</a></li>
-                <li><a href="wishlist.php" class="block hover:text-primary">Wishlist</a></li>
-                <li><a href="contact.php" class="block hover:text-primary">Contact</a></li>
+                <li><a href="{{route('home.index')}}" class="block hover:text-primary">Home</a></li>
+                <li><a href="{{route('shop.index')}}" class="block hover:text-primary">Shop</a></li>
+                <li><a href="{{route('cart.index')}}" class="block hover:text-primary">Cart</a></li>
+                <li><a href="{{route('wishlist.index')}}" class="block hover:text-primary">Wishlist</a></li>
+                <li><a href="#" class="block hover:text-primary">Contact</a></li>
             </ul>
         </nav>
     </div>
@@ -218,7 +222,7 @@
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div>
-                    <img src="{{asset('assets/images/logo-w.png')}}" alt=" Logo" class="mb-6 max-w-[200px]" />
+                    <img src="{{asset('assets/images/logo.jpg')}}" alt=" Logo" class="mb-6 max-w-[200px]" />
                     <ul class="space-y-2 text-sm">
                         <li>ABC, Address Here, Country</li>
                         <li>Call Us: <a href="#" class="hover:text-primary transition">+000 000 0000</a></li>
@@ -263,7 +267,7 @@
             </div>
 
             <div class="border-t border-gray-400 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-                <p class="text-sm">&copy; 2026 Surfside Media All rights reserved.</p>
+                <p class="text-sm">&copy; 2026 Phy Sopheak All rights reserved.</p>
                 <img src="{{asset('assets/images/payment.png')}}" alt="Payment" class="mt-4 md:mt-0" />
             </div>
         </div>

@@ -53,9 +53,7 @@
                                 @forelse ($coupons as $coupon )
                                         <tr class="hover:bg-gray-50 transition">
                                             <td class="px-6 py-4 text-sm text-gray-500">{{$coupon->id}}</td>
-                                            <td class="px-6 py-4">
-                                                <span class="font-bold text-gray-800 tracking-wider">{{$coupon->transliterator_get_error_code}}</span>
-                                            </td>
+                                            <td class="px-6 py-4 text-sm text-gray-500">{{$coupon->code}}</td>
                                             <td class="px-6 py-4">
                                                 @if($coupon->type == "fixed")
                                                     <span class="bg-green-50 text-green-700 px-2 py-1 rounded text-xs font-semibold uppercase">Fixed</span>

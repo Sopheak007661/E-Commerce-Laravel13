@@ -162,7 +162,7 @@
                         Showing <span class="font-bold text-primary">{{$products->firstItem() ?? 0 }} - {{$products->lastItem() ?? 0}} </span> of <span class="font-bold">{{$products->total()}}</span> Results
                     </p>
 
-                    <div class="flex items-center space-x-6">
+                    <div class="flex flex-col sm:flex-row space-y-4 items-start sm:items-center sm:space-x-6">
                         <div class="flex space-x-2">
                             <button id="btn-grid" class="w-8 h-8 flex items-center justify-center rounded bg-primary text-white transition">
                                 <i class="fa fa-th"></i>
@@ -172,7 +172,7 @@
                             </button>
                         </div>
 
-                        <div class="flex items-center">
+                        <div class=" flex items-center ">
                             <span class="mr-2 text-sm font-medium">Sort By:</span>
                             <select name="sort_by" class="border rounded p-1 px-7 text-sm focus:outline-none focus:border-primary auto-submit">
                                 <option value="newest" {{request("sort_by") === "newest" ? "selected":""}}>Newest</option>
