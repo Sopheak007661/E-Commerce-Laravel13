@@ -136,8 +136,10 @@
                     </button>
                     <div class="flex items-center gap-3">
                         <div class="text-right hidden sm:block">
-                            <p class="text-sm font-bold text-gray-700">{{Auth::user()->name}}</p>
-                            <p class="text-xs text-gray-500">Super Admin</p>
+                            <a href="{{route('profile.edit')}}">
+                                <p class="text-sm font-bold text-gray-700">{{Auth::user()->name}}</p>
+                                <p class="text-xs text-gray-500">Super Admin</p>
+                            </a>
                         </div>
                         <a href="{{route('profile.edit')}}"><img src="https://i.ibb.co/ksjmvRsc/6203891134942088357-121.gif" alt="Admin" class="w-10 h-10 rounded-full border border-gray-200"></a>
                     </div>

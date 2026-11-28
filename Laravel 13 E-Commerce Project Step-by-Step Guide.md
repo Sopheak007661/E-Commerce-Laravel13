@@ -845,3 +845,46 @@ public function coupon_delete($coupon_id)
   - **Delete** button: finds `delete-form-{id}` and calls `form.submit()`.
 - **Result:** the coupon CRUD is complete: list, add, edit, and delete.
 - **Next steps:** apply coupons in the cart and checkout.
+
+### Part 46: Prepare log and profile admin
+q
+
+
+
+### Part 47: Control Admin
+
+- **Files touched:**
+  - `app/Http/Controllers/UserController.php` (`view_admin_update`, `update_role`)
+  - `app/Models/User.php` (`utype` added to `$fillable`)
+  - `routes/web.php` (`admin.view.admin.update`, `admin.admin.users.update.role`)
+  - `resources/views/admin/users/index.blade.php` (new)
+  - `resources/views/profile/edit.blade.php` (Control Admin button)
+  - `resources/views/layouts/admin.blade.php` (name links to profile)
+- **Flow:**
+  1. The main admin (`Auth::id() === 1`) opens **Profile** and clicks **Control Admin**.
+  2. `view_admin_update()` lists users, admins first, 4 per page.
+  3. The admin clicks **Make Admin** or **Remove Admin** on a user row.
+  4. `PATCH /admin/users/{user}/role` runs `update_role()`.
+  5. The controller checks the rules, updates `utype`, and goes back with a `success` or `error` message.
+- **Routes:**
+
+```php
+Route::get('/users/role', [UserController::class, 'view_admin_update'])->name('view.admin.update');
+Route::patch('/users/{user}/role', [UserController::class, 'update_role'])->name('admin.users.update.role');
+```
+
+- **Controller rules in `update_role()`:**
+  - Validate `utype` is `ADM` or `USER`.
+  - You cannot remove your own admin access.
+  - Maximum of 3 admins.
+  - `$user->update(['utype' => ...])` saves the change.
+- **Key points:**
+  - `utype` must be in `$fillable`, or `update()` silently does nothing.
+  - `orderByRaw("utype = 'ADM' DESC")` puts admins at the top.
+  - The button sends a hidden `utype` with the opposite role, and the form needs `@csrf` and `@method('PATCH')`.
+  - The current user sees "Current Session" instead of a button.
+  - The Control Admin button on the profile page only shows for user id 1.
+- **Table scroll fix:**
+  - `overflow-x-auto` on the table wrapper, plus `whitespace-nowrap` on the table.
+  - `min-w-0` on the parent so the layout does not stretch.
+- **Next steps:** protect the routes with an admin check.

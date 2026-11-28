@@ -38,12 +38,20 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+
+Route::middleware('auth') -> prefix('admin') -> name('admin.')->group(function(){
+    Route::get('/users/role',[UserController::class,'view_admin_update'])-> name ('view.admin.update'); //admin.view.admin.update
+    Route::patch('/users/{user}/role',[UserController::class , 'update_role']) -> name('admin.users.update.role');//admin.admin.users.update.role
+});
+
 Route::middleware('auth')->group(function () {
     Route::get('/users',[UserController::class,'index'])->name('users.index');//==================
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
 
 Route::middleware([AuthAdmin::class])->group(function(){ //==========
     Route::get('/admin',[AdminController::class,'index'])->name('admin.index');
