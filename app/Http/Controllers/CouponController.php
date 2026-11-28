@@ -8,7 +8,15 @@ use App\Models\Coupon;
 class CouponController extends Controller
 {
     public function coupons(){
-        $coupons = Coupon::orderBy('expiry_date','DESC')->paginate(12);
+        $query = Coupon::query();
+        if($search = request('search')){
+            $query->where('code' ,'LIKE',"%{$search}%");
+        }
+         if(request() -> filled('type')){
+             $query->where('type',request('type'));
+        }
+    
+        $coupons = $query->orderBy('expiry_date','DESC')->paginate(10)->withQueryString();
         return view('admin.coupons',compact('coupons'));
     }
 

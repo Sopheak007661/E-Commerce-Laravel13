@@ -888,3 +888,81 @@ Route::patch('/users/{user}/role', [UserController::class, 'update_role'])->name
   - `overflow-x-auto` on the table wrapper, plus `whitespace-nowrap` on the table.
   - `min-w-0` on the parent so the layout does not stretch.
 - **Next steps:** protect the routes with an admin check.
+
+
+### Part 47: Search Option in Home page and fixed responsive of filter in shop page
+
+
+### Part 49: Coupon Search and Type Filter
+ 
+## Files Changed
+ 
+```
+modified:   app/Http/Controllers/CouponController.php
+modified:   resources/views/admin/coupons.blade.php
+```
+ 
+## What Changed
+ 
+The admin coupons page now supports:
+ 
+- Searching coupons by code (`search`)
+- Filtering coupons by type (`type`: fixed or percent)
+- Pagination that keeps the search and filter values (`withQueryString()`)
+- Sorting by expiry date, newest first
+## Controller
+ 
+`app/Http/Controllers/CouponController.php`
+ 
+```php
+public function coupons(){
+    $query = Coupon::query();
+    if($search = request('search')){
+        $query->where('code' ,'LIKE',"%{$search}%");
+    }
+    if(request() -> filled('type')){
+        $query->where('type',request('type'));
+    }
+ 
+    $coupons = $query->orderBy('expiry_date','DESC')->paginate(10)->withQueryString();
+    return view('admin.coupons',compact('coupons'));
+}
+```
+ 
+## View
+ 
+`resources/views/admin/coupons.blade.php`
+ 
+```php
+<form action="{{route('admin.coupons')}}" method="GET" class="flex flex-col md:flex-row gap-4 justify-between">
+    <div class="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+        <div class="relative w-full md:w-64">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                <i class="fa-solid fa-search text-gray-400"></i>
+            </span>
+            <input text="text" name="search" value="{{request('search')}}" class="w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Search coupon code...">
+        </div>
+ 
+        <select name="type"  onchange="this.form.submit()"  class="w-full md:w-40 border px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-primary bg-white text-gray-600">
+            <option value="">All Types</option>
+            <option value="fixed"  {{request('type') === 'fixed' ? 'selected' : ''}}>Fixed</option>
+            <option value="percent"  {{request('type') === 'percent' ? 'selected' : ''}}>Percent</option>
+        </select>
+    </div>
+</form>
+```
+ 
+## How It Works
+ 
+1. The form sends a `GET` request to `admin.coupons` with `search` and `type`.
+2. The controller adds a `LIKE` condition on `code` when `search` has a value.
+3. The controller adds a `where('type', ...)` condition when `type` is filled.
+4. Results are sorted by `expiry_date` descending and paginated by 10.
+5. `withQueryString()` keeps the filters when the user changes pages.
+6. The view uses `request('search')` and `request('type')` to keep the input and dropdown values after submit.
+## Small Fix to Remember
+ 
+In the search input, `text="text"` is a typo. It should be `type="text"`:
+ 
+```html
+<input type="text" name="search" ...>

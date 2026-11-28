@@ -12,22 +12,22 @@
                 </div>
 
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
-                    <div class="flex flex-col md:flex-row gap-4 justify-between">
+                    <form action="{{route('admin.coupons')}}" method="GET" class="flex flex-col md:flex-row gap-4 justify-between">
                         <div class="flex flex-col md:flex-row gap-4 w-full md:w-auto">
                             <div class="relative w-full md:w-64">
                                 <span class="absolute inset-y-0 left-0 flex items-center pl-3">
                                     <i class="fa-solid fa-search text-gray-400"></i>
                                 </span>
-                                <input type="text" class="w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Search coupon code...">
+                                <input text="text" name="search" value="{{request('search')}}" class="w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Search coupon code...">
                             </div>
 
-                            <select class="w-full md:w-40 border px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-primary bg-white text-gray-600">
+                            <select name="type"  onchange="this.form.submit()"  class="w-full md:w-40 border px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-primary bg-white text-gray-600">
                                 <option value="">All Types</option>
-                                <option value="fixed">Fixed</option>
-                                <option value="percent">Percent</option>
+                                <option value="fixed"  {{request('type') === 'fixed' ? 'selected' : ''}}>Fixed</option>
+                                <option value="percent"  {{request('type') === 'percent' ? 'selected' : ''}}>Percent</option>
                             </select>
                         </div>
-                    </div>
+                    </form>
                 </div>
 
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
